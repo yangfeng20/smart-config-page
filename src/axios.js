@@ -1,6 +1,5 @@
 import axios from "axios";
-import ElementPlus from "element-plus";
-import Moment from "moment";
+import {ElMessage} from "element-plus";
 
 
 /**
@@ -16,30 +15,13 @@ const request = axios.create({
     }
 })
 
-let router = {}
 
-
-/**
- * 全局的url 【指定了全局url之后, mock的模拟请求前面也需要这个前缀】
- * @type {string}
- */
-if (process.env.NODE_ENV === 'production') {
-    // http://smartcourse.ltd：9090【使用nginx代理转发到8090】
-    // 直接使用ip地址减少dns解析时间【现在长的时候解析要11秒】
-    request.defaults.baseURL = 'http://43.138.246.37:9090/'
-} else {
-    request.defaults.baseURL = 'http://localhost:8090/'
-}
+request.defaults.baseURL = location.href
 
 /**
  * 请求拦截器
  */
 request.interceptors.request.use(req => {
-        let authorization = localStorage.getItem('authorization');
-        // 请求时携带token
-        if (authorization) {
-            req.headers['Authorization'] = authorization;
-        }
         return req;
     }
 )
@@ -51,44 +33,19 @@ request.interceptors.response.use(resp => {
         // http的响应状态码会进入这里
         let result = resp.data;
         if (result.code === 200) {
-            formatDate(result)
             return resp;
         }
 
-        // 创建更新时间格式 todo 后端处理了时间
-        function formatDate(result) {
-            let formatStr = 'YYYY-MM-DD HH:mm:ss'
-            if (result?.data?.createdDate) {
-                result.data.createdDate = new Moment(result.data.createdDate).format(formatStr)
-            }
-            if (result?.data?.updatedDate) {
-                result.data.updatedDate = new Moment(result.data.updatedDate).format(formatStr)
-            }
-
-            if (result?.data?.content && result.data.content instanceof Array) {
-                result.data.content.forEach(item => {
-                    if (item?.createdDate) {
-                        item.createdDate = new Moment(item.createdDate).format(formatStr)
-                    }
-                    if (item?.updatedDate) {
-                        item.updatedDate = new Moment(item.updatedDate).format(formatStr)
-                    }
-                })
-            }
-        }
-
         if (result.code === 401) {
-            let goToRouter = '/login?redirect_url=' + location.pathname + location.search
-            ElementPlus.Message.error({
-                message: result.message + ` : <a href=${goToRouter}>点击登录</a>`,
-                dangerouslyUseHTMLString: true,
-            });
-            return Promise.reject(result.message)
+            return Promise.reject(401)
         }
 
         if (!result.code || result.code === 500) {
             // 代码执行下来，说明code不为200，或者result有问题【使用弹窗提示,可能为空白】
-            ElementPlus.Message.error(result.message ? result.message : '系统异常');
+            ElMessage({
+                type: "error",
+                message: result.message ? result.message : '系统异常'
+            });
         }
         // 使请求不进入正常的响应处理函数
         return Promise.reject(result.message)
@@ -106,19 +63,18 @@ request.interceptors.response.use(resp => {
         // 到达前端axios设置的超时时间
         if (error.code === 'ECONNABORTED') {
             // 弹窗提示
-            ElementPlus.Message({
+            ElMessage({
                 message: '网络超时',
                 type: 'error',
                 duration: 2000
             })
             // 使请求不进入正常的响应处理函数
-            return Promise.reject(() => {
-            })
+            return Promise.reject("time out")
         }
         // 网络不通，无法访问后端，或者服务器不在线
         if (error.code === 'ERR_NETWORK') {
             // 弹窗提示
-            ElementPlus.Message({
+            ElMessage({
                 message: '系统异常,请稍后重试',
                 type: 'error',
                 duration: 2000
@@ -133,17 +89,12 @@ request.interceptors.response.use(resp => {
             error.message = error.response.data.message;
         }
 
-        if (error.response.status === 401) {
-            // 无权限，路由致登录页
-            router.push('/login');
-        }
-
         if (error.response.status === 404) {
             error.message = "资源未找到";
         }
 
         // 弹窗提示，3秒
-        ElementPlus.Message({
+        ElMessage({
             message: error.message,
             type: 'error',
             duration: 3000

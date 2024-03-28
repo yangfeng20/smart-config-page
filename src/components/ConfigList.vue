@@ -4,12 +4,12 @@
     <div class="common-layout">
       <el-container>
         <el-header>
-          <el-link class="my-link" :underline="false" target="_blank" href="https://github.com/yangfeng20/">
+          <el-link class="my-link" :underline="false" target="_blank" href="https://github.com/yangfeng20/smart-config">
             <el-avatar :size="25" src="https://github.githubassets.com/favicons/favicon.png"/>
             &nbsp;&nbsp;Smart Config
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           </el-link>
-          <el-link class="my-link" :underline="false" target="_blank" href="https://github.com/yangfeng20/">
+          <el-link class="my-link" :underline="false" target="_blank" href="https://github.com/yangfeng20/smart-config">
             <el-icon>
               <InfoFilled/>
             </el-icon>
@@ -35,7 +35,8 @@
                   <template v-slot="{ row }">
                     <div
                         :class="row.status === '未发布' ? 'status un-release-status' : row.status === '已发布' ? 'status release-status' : ''">
-                      {{ row.status }}
+                      <span v-if='language()==="zh_CN"'>{{ row.status }}</span>
+                      <span v-else>{{ row.status === '未发布' ? 'Not Release' : 'Released' }}</span>
                     </div>
                   </template>
                 </el-table-column>
@@ -62,7 +63,8 @@
             </el-main>
             <el-footer>
               <div style="text-align: center">
-                <el-link class="my-link" :underline="false" target="_blank" href="https://github.com/yangfeng20/">
+                <el-link class="my-link" :underline="false" target="_blank"
+                         href="https://github.com/yangfeng20/smart-config">
                   <el-avatar :size="20" src="https://github.githubassets.com/favicons/favicon.png"/>
                   &nbsp;&nbsp;Smart Config
                   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -129,8 +131,7 @@
   </div>
 </template>
 <script setup>
-import {ref, getCurrentInstance } from 'vue';
-const instance = getCurrentInstance();
+import {ref, defineEmits} from 'vue';
 import axios from "./../axios";
 // 导入t函数
 import {useI18n} from "vue-i18n";
@@ -140,6 +141,7 @@ import {ElNotification} from "element-plus";
 // data
 const valueVisible = ref(false);
 const viewValue = ref("");
+const configList = ref([])
 
 const editValueVisible = ref(false);
 const editViewValue = ref("");
@@ -147,6 +149,9 @@ const editViewComment = ref("");
 const editViewKey = ref("")
 const editViewKeyDisable = ref(false)
 
+const language = () => {
+  return localStorage.getItem("locale")
+}
 
 // methods
 const {t} = useI18n();
@@ -190,35 +195,58 @@ const showEditValue = (configKey, configValue, comment) => {
   editValueVisible.value = true
 }
 
-const doReleaseConfig = () => {
-  ElNotification({
-    title: t("config.releaseSuccessTitle"),
-    type: 'success',
-    duration: 1000,
+const getConfigList = () => {
+  axios.post("/config/list").then(resp => {
+    configList.value = resp.data.data
+  }).catch(e => {
+    loginPast(e)
   })
-  axios.post("/release").then(resp => {
+}
+getConfigList()
+
+const doReleaseConfig = () => {
+  axios.post("/config/release").then(resp => {
     let data = resp.data.data
     ElNotification({
       title: t("config.releaseSuccessTitle"),
       type: 'success',
       duration: 1000,
     })
-  }).catch(e => {
 
+    getConfigList()
+  }).catch(e => {
+    loginPast(e)
   }).finally(() => {
     editValueVisible.value = false
   })
 }
 
+// 定义登录过期事件
+const emits = defineEmits(['loginPast']);
+
+const loginPast = (e) => {
+  if (e === 401) {
+    emits('loginPast');
+    return;
+  }
+  ElNotification({
+    title: "Request failed",
+    message: e,
+    type: 'error',
+    duration: 2000,
+  })
+}
+
 const doEditConfig = () => {
-  axios.post("/save", {
-    configKey: editViewKey.value,
-    configValue: editViewValue.value,
+  axios.post("/config/save", {
+    key: editViewKey.value,
+    value: editViewValue.value,
     desc: editViewComment.value,
   }).then(resp => {
     let data = resp.data.data
+    getConfigList()
   }).catch(e => {
-
+    loginPast(e)
   }).finally(() => {
     editValueVisible.value = false
   })
@@ -253,309 +281,6 @@ const tableRowClassName = ({row, rowIndex}) => {
   return '';
 }
 
-</script>
-
-<script>
-export default {
-  name: "ConfigList",
-  created() {
-  },
-  methods: {},
-  data() {
-    return {
-      configList: [
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "hahhahafowiefjow灰色调峰叫我我偶尔峰叫我也放假噢威海市金佛微积分我的饭就偶尔hahhahafowiefjow灰色调峰叫我我偶尔峰叫我也放假噢威海市金佛微积分我的饭就偶尔hahhahafowiefjow灰色调峰叫我我偶尔峰叫我也放假噢威海市金佛微积分我的饭就偶尔hahhahafowiefjow灰色调峰叫我我偶尔峰叫我也放假噢威海市金佛微积分我的饭就偶尔hahhahafowiefjow灰色调峰叫我我偶尔峰叫我也放假噢威海市金佛微积分我的饭就偶尔",
-          "durable": "false",
-          "key": "ccc",
-          "status": "已发布",
-          "value": "333"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "logging.level.com.maple.config.core",
-          "status": "已发布",
-          "value": "debug"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "prod",
-          "status": "已发布",
-          "value": "{\n" +
-              "  \"jobStatId\": 43,\n" +
-              "  \"callJobId\": 12,\n" +
-              "  \"companyId\": 72,\n" +
-              "  \"totalCount\": 26,\n" +
-              "  \"totalTime\": 84,\n" +
-              "  \"doneCount\": 98,\n" +
-              "  \"calledCount\": 78,\n" +
-              "  \"rejectedCount\": 65,\n" +
-              "  \"unavailableCount\": 3,\n" +
-              "  \"fromUnavailableCount\": 74,\n" +
-              "  \"blankCount\": 15,\n" +
-              "  \"closedCount\": 68,\n" +
-              "  \"busyCount\": 94,\n" +
-              "  \"downCount\": 53,\n" +
-              "  \"missCount\": 81,\n" +
-              "  \"overdueCount\": 33,\n" +
-              "  \"blacklistCount\": 88,\n" +
-              "  \"tiandunBlockCount\": 36,\n" +
-              "  \"blindCount\": 62,\n" +
-              "  \"lostCount\": 65,\n" +
-              "  \"userHangUpCount\": 57,\n" +
-              "  \"aiHangUpCount\": 14,\n" +
-              "  \"transferSuccess\": 67,\n" +
-              "  \"transferTotal\": 40,\n" +
-              "  \"noAvailableLineCount\": 13,\n" +
-              "  \"gmtCreate\": \"2017-10-13 09:07:56\",\n" +
-              "  \"gmtModified\": \"2015-03-25 15:23:35\",\n" +
-              "  \"customerCount\": 69,\n" +
-              "  \"callCount\": 4,\n" +
-              "  \"linePeriodCount\": 12,\n" +
-              "  \"aiSeatBillPeriodCount\": 87,\n" +
-              "  \"overTwoChatRoundCount\": 90,\n" +
-              "  \"dialogueRoundsJson\": \"test_3f572fa06023\",\n" +
-              "  \"callDurationJson\": \"test_a8d7d0928485\"\n" +
-              "}"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.username",
-          "status": "已发布",
-          "value": "admin"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "main.test02",
-          "status": "已发布",
-          "value": "{\"admin\":\"123456\",\"test\":\"bbbb\"}"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "spring.application.name",
-          "status": "未发布",
-          "value": "smart-test"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "env",
-          "status": "未发布",
-          "value": "prod"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.password",
-          "status": "已发布",
-          "value": "admin"
-        }, {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "ccc",
-          "status": "已发布",
-          "value": "333"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "logging.level.com.maple.config.core",
-          "status": "已发布",
-          "value": "debug"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "prod",
-          "status": "已发布",
-          "value": "false"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.username",
-          "status": "已发布",
-          "value": "admin"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "main.test02",
-          "status": "已发布",
-          "value": "{\"admin\":\"123456\",\"test\":\"bbbb\"}"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "spring.application.name",
-          "status": "未发布",
-          "value": "smart-test"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "env",
-          "status": "未发布",
-          "value": "prod"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.password",
-          "status": "已发布",
-          "value": "admin"
-        }, {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "ccc",
-          "status": "已发布",
-          "value": "333"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "logging.level.com.maple.config.core",
-          "status": "已发布",
-          "value": "debug"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "prod",
-          "status": "已发布",
-          "value": "false"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.username",
-          "status": "已发布",
-          "value": "admin"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "main.test02",
-          "status": "已发布",
-          "value": "{\"admin\":\"123456\",\"test\":\"bbbb\"}"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "spring.application.name",
-          "status": "未发布",
-          "value": "smart-test"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "env",
-          "status": "未发布",
-          "value": "prod"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.password",
-          "status": "已发布",
-          "value": "admin"
-        }, {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "ccc",
-          "status": "已发布",
-          "value": "333"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "logging.level.com.maple.config.core",
-          "status": "已发布",
-          "value": "debug"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "prod",
-          "status": "已发布",
-          "value": "false"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.username",
-          "status": "已发布",
-          "value": "admin"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "main.test02",
-          "status": "已发布",
-          "value": "{\"admin\":\"123456\",\"test\":\"bbbb\"}"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "spring.application.name",
-          "status": "未发布",
-          "value": "smart-test"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "env",
-          "status": "未发布",
-          "value": "prod"
-        },
-        {
-          "createDate": "2024-03-27 17:20:02",
-          "desc": "",
-          "durable": "true",
-          "key": "smart.password",
-          "status": "已发布",
-          "value": "admin"
-        },
-      ]
-    }
-  }
-}
 </script>
 
 <style>

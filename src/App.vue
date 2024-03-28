@@ -16,8 +16,8 @@
           inactive-text="En"
           @change.native="handleChangeI18n"/>
 
-      <new-login v-if="!loginActive"></new-login>
-      <config-list v-if="loginActive"></config-list>
+      <new-login @loginSuccess="loginActive=true" v-if="!loginActive"></new-login>
+      <config-list @loginPast="loginActive=false" v-if="loginActive"></config-list>
     </el-config-provider>
   </div>
 
@@ -31,11 +31,21 @@ import {useI18n} from "vue-i18n";
 import zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import en from "element-plus/dist/locale/en.mjs";
 
-const loginActive = ref(true);
+const getCookie = (cookieName) => {
+  const cookies = document.cookie.split("; ")
+  for (let i = 0; i < cookies.length; i++) {
+    const [name, value] = cookies[i].split("=")
+    if (name === cookieName) {
+      return decodeURIComponent(value)
+    }
+  }
+  return ""
+}
+const loginActive = !!getCookie("JSESSIONID") ? ref(true) : ref(false);
 
-const {locale} = useI18n({useScope: "global"}); // vue-i18n提供了一个钩子函数 useI18n(),暴露出locale属性用于切换语言
-locale.value = localStorage.getItem("locale") || "zh_CN"; // 页面首次加载显示的语言
-const elLocale = computed(() => (locale.value === "zh_CN" ? zhCn : en)); // Element Plus组件国际化
+const {locale} = useI18n({useScope: "global"});
+locale.value = localStorage.getItem("locale") || "zh_CN";
+const elLocale = computed(() => (locale.value === "zh_CN" ? zhCn : en));
 // 中英文切换开关
 const langSwitch = ref(locale.value === "zh_CN");
 // 中英文切换事件

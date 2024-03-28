@@ -21,56 +21,49 @@
 </template>
 
 <script setup>
+import {ref, defineEmits} from 'vue';
+import axios from "./../axios";
 // 导入t函数
 import {useI18n} from "vue-i18n";
+import {ElNotification} from "element-plus";
 
 const {t} = useI18n();
-</script>
-<script>
-import {ElNotification} from 'element-plus'
 
-export default {
-  name: "NewLogin",
-  data() {
-    return {
-      username: "",
-      pwd: "",
-    }
-  },
-  methods: {
+const username = ref("")
+const pwd = ref("")
+// 定义登录成功事件
+const emits = defineEmits(['loginSuccess']);
 
-    loginHandler() {
-      if (!this.username || !this.pwd) {
-        ElNotification({
-          title: this.t("login.errorTitle"),
-          message: this.t("login.inputEmpty"),
-          type: 'warning',
-          duration: 2000,
-        })
-        return;
-      }
 
-      this.login(this.username, this.pwd)
-    },
-
-    login(username, pwd) {
-
-      this.$axios.post("/login", {
-        username, pwd
-      }).then(resp => {
-
-      }).catch(e => {
-        ElNotification({
-          title: '登录失败',
-          message: e,
-          type: 'error',
-        })
-      }).finally(() => {
-
-      })
-    },
+const loginHandler = () => {
+  if (!username.value || !pwd.value) {
+    ElNotification({
+      title: t("login.errorTitle"),
+      message: t("login.inputEmpty"),
+      type: 'warning',
+      duration: 2000,
+    })
+    return;
   }
+
+  login(username.value, pwd.value)
 }
+
+const login = (username, pwd) => {
+  axios.post("config/login?" + `username=${username}&password=${pwd}`).then(resp => {
+    ElNotification({
+      title: '登录成功',
+      message: "",
+      type: 'success',
+    })
+    // 触发登录成功事件
+    emits('loginSuccess');
+  }).catch(e => {
+  }).finally(() => {
+
+  })
+}
+
 </script>
 
 <style>
