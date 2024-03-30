@@ -26,6 +26,7 @@ import axios from "./../axios";
 // 导入t函数
 import {useI18n} from "vue-i18n";
 import {ElNotification} from "element-plus";
+import CryptoJS from 'crypto-js';
 
 const {t} = useI18n();
 
@@ -50,7 +51,11 @@ const loginHandler = () => {
 }
 
 const login = (username, pwd) => {
-  axios.post("config/login?" + `username=${username}&password=${pwd}`).then(resp => {
+  username = CryptoJS.SHA256(username).toString()
+  pwd = CryptoJS.SHA256(pwd).toString()
+  axios.post(`/config/login`, {
+    username, pwd
+  }).then(resp => {
     ElNotification({
       title: '登录成功',
       message: "",

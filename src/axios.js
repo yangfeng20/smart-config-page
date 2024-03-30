@@ -16,7 +16,8 @@ const request = axios.create({
 })
 
 
-request.defaults.baseURL = location.href
+request.defaults.baseURL = "http://localhost:6767/"
+// request.defaults.baseURL = location.href
 
 /**
  * 请求拦截器
@@ -42,10 +43,11 @@ request.interceptors.response.use(resp => {
 
         if (!result.code || result.code === 500) {
             // 代码执行下来，说明code不为200，或者result有问题【使用弹窗提示,可能为空白】
-            ElMessage({
-                type: "error",
-                message: result.message ? result.message : '系统异常'
-            });
+            // ElMessage({
+            //     type: "error",
+            //     message: result.message ? result.message : '系统异常'
+            // });
+            // 代码中提示
         }
         // 使请求不进入正常的响应处理函数
         return Promise.reject(result.message)
