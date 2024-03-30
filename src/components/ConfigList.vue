@@ -229,12 +229,13 @@ const loginPast = (e) => {
     emits('loginPast');
     return;
   }
-  ElNotification({
-    title: "Request failed",
-    message: e,
-    type: 'error',
-    duration: 2000,
-  })
+  // 在axios中处理
+  // ElNotification({
+  //   title: "Request failed",
+  //   message: e,
+  //   type: 'error',
+  //   duration: 2000,
+  // })
 }
 
 const doEditConfig = () => {
