@@ -16,8 +16,7 @@ const request = axios.create({
 })
 
 
-request.defaults.baseURL = "http://localhost:6767/"
-// request.defaults.baseURL = location.href
+request.defaults.baseURL = location.href
 
 /**
  * 请求拦截器
