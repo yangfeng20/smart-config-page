@@ -22,6 +22,8 @@ const zh_CN = {
         notDurable:"未持久化",
         releaseConfig:"发布配置",
         addConfig:"新增配置",
+        exportConfig:"导出配置",
+        exportTitle:"导出配置",
         releaseSuccessTitle:"配置发布成功",
         row: {
             key: "Key",
@@ -33,6 +35,10 @@ const zh_CN = {
             updateDate: "更新时间",
             opt: "操作"
         }
+    },
+    common: {
+        confirm: "确定",
+        cancel: "取消"
     }
 };
 export default zh_CN;

@@ -23,6 +23,7 @@
               <div style="margin-bottom: 10px;text-align: right">
                 <el-button type="success" @click="doReleaseConfig">{{ t('config.releaseConfig') }}</el-button>
                 <el-button type="warning" @click="showEditValue(null,null,null)">{{ t('config.addConfig') }}</el-button>
+                <el-button type="primary" @click="showExportDialog">{{ t('config.exportConfig') }}</el-button>
               </div>
               <el-table
                   border
@@ -128,6 +129,27 @@
         <el-button size="small" type="primary" @click="doEditConfig">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!--导出配置弹窗-->
+    <el-dialog
+        class="dialog-div"
+        :title="t('config.exportTitle')"
+        v-model="exportVisible"
+        width="30%">
+      <div class="export-container">
+        <el-radio-group v-model="exportType">
+          <el-radio label="properties">Properties</el-radio>
+          <el-radio label="json">JSON</el-radio>
+          <el-radio label="yaml">YAML</el-radio>
+        </el-radio-group>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="exportVisible = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="doExportConfig">{{ t('common.confirm') }}</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <script setup>
@@ -148,6 +170,10 @@ const editViewValue = ref("");
 const editViewComment = ref("");
 const editViewKey = ref("")
 const editViewKeyDisable = ref(false)
+
+// 导出配置相关
+const exportVisible = ref(false)
+const exportType = ref('properties')
 
 const language = () => {
   return localStorage.getItem("locale")
@@ -251,7 +277,17 @@ const doEditConfig = () => {
   }).finally(() => {
     editValueVisible.value = false
   })
+}
 
+const showExportDialog = () => {
+  exportVisible.value = true
+}
+
+const doExportConfig = () => {
+  const link = document.createElement('a')
+  link.href = `${axios.defaults.baseURL}config/export?type=${exportType.value}`
+  link.click()
+  exportVisible.value = false
 }
 
 const tableColClassName = ({row, column, rowIndex, columnIndex}) => {
@@ -372,5 +408,12 @@ const tableRowClassName = ({row, rowIndex}) => {
 
 .my-link {
   margin: 15px;
+}
+
+.export-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 </style>

@@ -20,8 +20,10 @@ const en_US = {
     editViewTitle: "Change configuration",
     addViewTitle: "Add configuration",
     notDurable:"Not durable",
-    releaseConfig:"Release config",
+    releaseConfig:"Release Config",
     addConfig:"Add Config",
+    exportConfig:"Export config",
+    exportTitle:"Export config",
     releaseSuccessTitle:"Configuration released successfully",
     row: {
       key: "Key",
@@ -33,6 +35,10 @@ const en_US = {
       updateDate: "Update time",
       opt: "operate"
     }
+  },
+  common: {
+    confirm: "Confirm",
+    cancel: "Cancel"
   }
 };
 export default en_US;
